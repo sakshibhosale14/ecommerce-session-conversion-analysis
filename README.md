@@ -1,16 +1,16 @@
 # E-commerce Session Conversion Analysis
 
-*Morning vs afternoon conversion across 110M clickstream events (Oct-Nov 2019)*
+*When do online store visits turn into purchases? An analysis of 110M clickstream events (Oct-Nov 2019).*
 
-An analysis of about 110 million clickstream events (October-November 2019) from a multi-category online store, built with SQL (DuckDB) and Power BI.
+**Tools:** SQL (DuckDB), Python, Power BI
 
-## Headline finding
+## Summary
 
-**Afternoon sessions (14-16 UTC) convert about a third worse than morning sessions (5-9 UTC), in both months.** The gap is not explained by bounces, product category mix, new-vs-returning visitors, or weekday-vs-weekend mix. The data cannot say what does explain it, so the recommendation is to diagnose the cause before investing in a fix.
+An online store has plenty of visitors but few buyers. I built visit sessions from raw clickstream data in SQL and measured when visits convert. **Afternoon sessions (14-16 UTC) convert about a third worse than morning sessions (5-9 UTC), in both months.** Four plausible explanations do not account for the gap, and this dataset cannot show what does. The recommendation is to find the cause before investing in a fix.
 
 ![Dashboard](dashboard/dashboard.png)
 
-## Results at a glance
+## Key results
 
 | | October | November (excl. Nov 15-17) |
 |---|---|---|
@@ -23,68 +23,90 @@ An analysis of about 110 million clickstream events (October-November 2019) from
 | 95% confidence interval for the gap | 34.0% to 36.7% | 32.2% to 35.2% |
 | Days with afternoon lower | 31 of 31 | 27 of 27 |
 
-October has 31 days and cleaned November has 27, so session, user and revenue totals are not directly comparable. Conversion rates are.
+October has 31 days and cleaned November has 27, so session and user totals are not directly comparable. Conversion rates are.
 
-## Questions I asked
+## Questions investigated
 
 1. Where do sessions turn into purchases, and when?
 2. Is the time-of-day difference real, or an artifact of bounces, category mix or visitor type?
 3. Does the finding hold in a second month?
 4. How much would closing part of the gap be worth?
 
-## What I did
+## Approach
 
-1. **Built sessions from raw events in SQL.** Sessions use a 30-minute inactivity rule (`LAG` plus a running `SUM`). I compared them with the dataset's own session ID, found it follows no clean time rule, and used my own definition.
-2. **Chose one primary metric.** Session conversion, because about half of purchase sessions have no cart event, which makes cart-based funnel steps unreliable.
-3. **Tested four explanations** for the time-of-day gap (bounces, category mix, new vs returning, weekday vs weekend) and ruled all four out.
-4. **Replicated on a holdout month.** October was used to find the pattern, November to check it.
-5. **Found and handled bad data.** Nov 15 has 212,519 cart sessions and zero purchases (likely a logging gap), and Nov 16-17 are abnormal. All three days are excluded, and results are shown with and without them.
-6. **Checked robustness.** The gap is 35.5%, 35.4% and 35.7% under 15-, 30- and 60-minute session rules. Bootstrap 95% confidence intervals (resampling days) are narrow, and the afternoon was lower on every day of both months.
-7. **Sized the opportunity as scenarios, not a forecast.** Closing 25% of the gap during 14-16 UTC would add about 2% to monthly revenue.
+1. **Sessions.** Built in SQL with a 30-minute inactivity rule (`LAG` plus a running `SUM`). The dataset's own session ID follows no clean time rule and disagrees with mine for about a quarter of users, so I used my own definition. The gap is 35.5%, 35.4% and 35.7% under 15-, 30- and 60-minute rules.
+2. **Primary metric.** Session conversion (sessions with a purchase / all sessions). About half of purchase sessions have no cart event in the data, which makes cart-based funnel steps unreliable.
+3. **Alternative explanations.** Compared the gap within each segment (see below).
+4. **Second month.** Replicated the gap in November after excluding three anomalous days.
+5. **Statistics.** 95% bootstrap confidence intervals that resample whole days, not sessions, because sessions from the same day are not independent.
+6. **Opportunity sizing.** Scenarios, not a forecast (see below).
 
-## Repository structure
+## Explanations ruled out
 
-```
-ecommerce-session-conversion-analysis/
-├── README.md
-├── sql/            # numbered queries, run in order
-├── python/         # bootstrap confidence interval for the gap
-├── docs/
-│   ├── definitions.md   # every metric definition and data decision, with evidence
-│   ├── findings.md      # full results, ruled-out explanations, limitations
-│   └── memo.md          # one-page memo for a business audience
-├── exports/        # small CSVs feeding the dashboard
-├── dashboard/      # Power BI file and screenshot
-└── data/           # not committed (see below)
-```
+| Explanation | What I checked | Result |
+|---|---|---|
+| Afternoon visitors bounce more | Single-click sessions and events per session, hour 8 vs hour 15 | No: 28.9% vs 30.9% single-click, and 6.0 vs 5.1 events per session |
+| Different product mix | Category share in each window, and the gap within each category | No: electronics is 46.3% of afternoon and 44.8% of morning sessions, and the gap appears in every major category |
+| More first-time visitors | New vs returning share in each window | No: 38.6% vs 38.0%, and the gap holds in both groups |
+| Weekday vs weekend mix | Weekend share in each window, and the gap within each day type | No: weekend share 25.1% vs 26.4% in October, and the gap is 35.5% (weekdays) and 35.2% (weekends) |
 
-## How to reproduce
+## Data quality
 
-1. Download the dataset from Kaggle (search "eCommerce behavior data from multi category store", by mkechinov) and put `2019-Oct.csv` and `2019-Nov.csv` in `data/raw/`. The files are several GB each, so check your disk space.
-2. Install DuckDB: `pip install duckdb`.
-3. From the repo root, run the files in `sql/` in order (01 to 11), either with the DuckDB CLI (`duckdb < sql/01_convert_to_parquet.sql`) or by pasting each query into a notebook with `duckdb.sql("""...""").show()`. Paths in the SQL are relative to the repo root.
-4. Files 03, 05 and 10 are heavy (they sort tens of millions of rows) and can take several minutes.
-5. Run `python python/gap_confidence_interval.py` from the repo root for the confidence intervals.
-6. Open `dashboard/funnel_dashboard.pbix` in Power BI Desktop. It reads the CSVs in `exports/`, so you may need to repoint the data source.
+- **Nov 15:** 212,519 cart sessions and zero purchases, which looks like a purchase-logging gap.
+- **Nov 16-17:** traffic and conversion far outside the normal range (Nov 17 converted at 18.2% against roughly 4-6% nearby), cause unknown.
+- All three days are excluded from the November comparison, and results are shown with and without them.
+- 31.8% of events have no category, so category findings cover about three-quarters of sessions.
+- 68,673 zero-price rows (views and carts only) are kept for the funnel and excluded from revenue.
+
+## Opportunity sizing (scenarios, not a forecast)
+
+If targeted changes closed part of the afternoon gap during 14-16 UTC:
+
+| Share of gap closed | Extra monthly revenue |
+|---|---|
+| 10% | about 0.8% |
+| 25% | about 2.0% |
+| 50% | about 3.9% |
+
+The result is nearly identical in both months. It assumes extra purchases are worth the afternoon's usual average purchase.
+
+## Recommendation
+
+Find the cause before investing in a fix: check traffic source, device and region by hour in the company's own analytics, then A/B test any change aimed at the 14-16 window. Add an alert for days with normal cart activity but near-zero purchases.
+
+## Limitations
+
+- The cause of the gap is unexplained. This dataset has no traffic source, device or region.
+- I chose the time windows after viewing the hourly chart, so replication in a second month is the main safeguard.
+- Intervals rest on only 27-31 days per month.
+- The timezone, currency and purchase quantity are not stated in the data.
+- Two months of one store from 2019. The cause of the Nov 16-17 spike is unknown.
 
 ## Skills demonstrated
 
-- **SQL (DuckDB):** window functions (`LAG`, running `SUM`, `SUM() OVER (PARTITION BY ...)`), CTEs, sessionization, conditional aggregation, joins, `UNION ALL`, `CROSS JOIN` with `UNNEST`.
-- **Metric design:** defining sessions and conversion, and documenting every decision with evidence.
-- **Data quality:** quantifying missing values, handling zero prices, and detecting and excluding abnormal days.
-- **Analytical thinking:** testing and ruling out alternative explanations, holdout replication, sensitivity analysis.
-- **Statistics:** bootstrap confidence intervals that resample days (not sessions) to respect dependence.
-- **Business communication:** opportunity sizing framed as scenarios, plus a one-page memo.
-- **Power BI:** line charts, summary table and annotated dashboard built from small exported tables.
+- **SQL (DuckDB):** window functions, CTEs, sessionization, conditional aggregation, joins, `UNION ALL`, `CROSS JOIN` with `UNNEST`
+- **Analysis:** defining metrics, ruling out alternative explanations, replication in a second month, sensitivity checks
+- **Statistics:** bootstrap confidence intervals that respect dependence in the data
+- **Data quality:** quantifying missing values, handling zero prices, detecting and excluding abnormal days
+- **Communication:** a one-page memo and a Power BI dashboard
 
-## Limitations and next steps
+## Repository
 
-- The cause of the afternoon gap is unexplained. This dataset has no traffic source, device or region.
-- I chose the morning and afternoon windows after viewing the hourly chart. November replication is the main safeguard.
-- Confidence intervals come from resampling only 27-31 days per month, so they are rough. There are no formal tests beyond the intervals.
-- The timezone is not stated, so no local-time story is told. Revenue has no quantity column and no stated currency.
-- Only two months from one store in 2019. Nov 16-17 are excluded without a known cause.
+| Folder | Contents |
+|---|---|
+| `sql/` | 12 numbered queries |
+| `python/` | bootstrap confidence interval |
+| `docs/` | `definitions.md` (every decision with evidence), `findings.md` (full results), `memo.md` (one-page memo) |
+| `exports/` | small CSVs used by the dashboard |
+| `dashboard/` | Power BI file and screenshot |
+
+## Reproduce
+
+1. Download the dataset from Kaggle (search "eCommerce behavior data from multi category store") and put `2019-Oct.csv` and `2019-Nov.csv` in `data/raw/`. The data is not included because the files are several GB.
+2. `pip install duckdb`
+3. From the repo root, run `sql/01` to `sql/12` in order. Files 03, 05, 06 and 10 are heavy and can take several minutes.
+4. `python python/gap_confidence_interval.py`
 
 ## Data credit
 
-Dataset: eCommerce behavior data from a multi-category store, by REES46 Marketing Platform (Kaggle, user mkechinov). Check the dataset page for its license terms before reusing the data.
+Dataset: [eCommerce behavior data from multi category store](https://www.kaggle.com/datasets/mkechinov/ecommerce-behavior-data-from-multi-category-store) on Kaggle (user mkechinov), collected by the Open CDP project. Kaggle lists the license as "Data files © Original Authors". The raw data is not included in this repository; download it from Kaggle. The files in `exports/` are small aggregated summary tables.
