@@ -1,0 +1,7 @@
+# Raw and converted data are far too large for GitHub
+data/raw/*
+data/parquet/*
+!data/raw/.gitkeep
+!data/parquet/.gitkeep
+*.duckdb
+.ipynb_checkpoints/
