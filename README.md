@@ -8,7 +8,11 @@
 
 Using 110M clickstream events from an online store (Oct-Nov 2019), I built visit sessions in SQL and measured when visits turn into purchases. Afternoon visits (14-16 UTC) convert about 35% worse than morning visits (5-9 UTC): 5.9% vs 9.2% in October. The gap repeated in November (34%, after excluding three anomalous days), and 95% confidence intervals put it at roughly 34-37% and 32-35%. I tested four possible explanations (bounces, product mix, new vs returning visitors, weekday vs weekend) and found that none accounts for the gap. The cause can’t be identified from this data, so I recommend checking traffic source and device next, then A/B testing a fix. Closing a quarter of the gap would be worth an estimated 2% of monthly revenue, as a scenario, not a forecast.
 
+
+
 !\[Dashboard](dashboard/dashboard.png)
+
+
 
 ## Key results
 
@@ -105,7 +109,7 @@ Find the cause before investing in a fix: check traffic source, device and regio
 1. Download the dataset from Kaggle (search "eCommerce behavior data from multi category store") and put `2019-Oct.csv` and `2019-Nov.csv` in `data/raw/`. The data is not included because the files are several GB.
 2. `pip install duckdb`
 3. From the repo root, run `sql/01` to `sql/12` in order. Files 03, 05, 06 and 10 are heavy and can take several minutes.
-4. `python python/gap\_confidence\_interval.py`
+4. `python python/gap\\\\\\\_confidence\\\\\\\_interval.py`
 
 ## Data credit
 
