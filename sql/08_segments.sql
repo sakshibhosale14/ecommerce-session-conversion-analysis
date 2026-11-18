@@ -1,6 +1,4 @@
 -- 08: Is the morning-vs-afternoon gap explained by category or visitor type?
--- (Result: neither. The gap appears in every major category and in both visitor groups.)
--- Morning = hours 5-9 UTC; afternoon = hours 14-16 UTC (docs/definitions.md, section 8).
 
 -- Conversion by main category (October). Main category = the most common
 -- first-level category in the session; 'unknown' if none.
@@ -49,7 +47,7 @@ WHERE main_category IN ('electronics', 'unknown', 'appliances', 'computers', 'ap
 ORDER BY main_category, period;
 
 -- First session seen in October vs later sessions
--- ("first in Oct" is not the same as a new customer).
+
 WITH labeled AS (
     SELECT CASE WHEN hour(session_start) BETWEEN 5 AND 9   THEN 'morning (5-9)'
                 WHEN hour(session_start) BETWEEN 14 AND 16 THEN 'afternoon (14-16)' END AS period,
