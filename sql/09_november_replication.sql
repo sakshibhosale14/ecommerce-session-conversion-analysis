@@ -1,6 +1,5 @@
 -- 09: Does the October finding hold in November? (Holdout month.)
 -- Also: how three abnormal days (Nov 15-17) were found and handled.
--- See docs/definitions.md, section 7.
 
 -- November headline numbers
 SELECT COUNT(*) AS sessions,
