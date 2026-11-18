@@ -1,8 +1,6 @@
 -- 06: The funnel, and why session conversion (not cart steps) is the primary metric.
--- See docs/definitions.md, section 2.
-
 -- Funnel counts per session (October).
--- Result: 303,200 purchase sessions have no cart event in the same session.
+
 WITH session_flags AS (
     SELECT user_id, session_num,
            MAX(CASE WHEN event_type = 'view'     THEN 1 ELSE 0 END) AS had_view,
@@ -19,8 +17,6 @@ SELECT COUNT(*) AS sessions,
        SUM(CASE WHEN had_view = 0 THEN 1 ELSE 0 END) AS sessions_without_view
 FROM session_flags;
 
--- Do those no-cart purchases have an earlier cart for the same product?
--- Result: only 22,044 of 303,200 (7.3%).
 WITH flags AS (
     SELECT user_id, session_num,
            MAX(CASE WHEN event_type = 'cart' THEN 1 ELSE 0 END) AS had_cart
@@ -46,8 +42,6 @@ FROM np
 LEFT JOIN carts c
   ON c.user_id = np.user_id AND c.product_id = np.product_id;
 
--- Same check by part of the month: does the explained share rise as more history is visible?
--- Result: 3.8% (Oct 1-7) rising to 9.9% (Oct 22-31).
 WITH flags AS (
     SELECT user_id, session_num,
            MAX(CASE WHEN event_type = 'cart' THEN 1 ELSE 0 END) AS had_cart
