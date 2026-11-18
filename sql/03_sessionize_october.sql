@@ -1,8 +1,4 @@
 -- 03: Build sessions for October with a 30-minute inactivity rule.
--- A new session starts at a user's first event, or after a gap > 30 minutes.
--- LAG gives each event the previous event's time; a running SUM of the
--- "new session" flags numbers the sessions within each user.
--- A session is identified by (user_id, session_num).
 
 COPY (
     WITH ordered AS (
