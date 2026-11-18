@@ -1,7 +1,6 @@
 -- 04: Compare my 30-minute sessions with the dataset's own user_session column.
--- Findings: see docs/definitions.md, section 1.
-
 -- Session counts (mine: 7,796,425; dataset: 9,244,421)
+
 SELECT COUNT(*) AS my_sessions FROM (
     SELECT DISTINCT user_id, session_num
     FROM 'data/parquet/oct_sessions.parquet'
@@ -10,7 +9,6 @@ SELECT COUNT(*) AS my_sessions FROM (
 SELECT COUNT(DISTINCT user_session) AS dataset_sessions
 FROM 'data/parquet/oct.parquet';
 
--- Per user: does the dataset have more, fewer, or the same number of sessions?
 WITH mine AS (
     SELECT user_id, COUNT(DISTINCT session_num) AS my_sessions
     FROM 'data/parquet/oct_sessions.parquet'
@@ -29,8 +27,6 @@ FROM mine m JOIN theirs t USING (user_id)
 GROUP BY comparison
 ORDER BY users DESC;
 
--- How often does the dataset's session ID change, by gap between clicks?
--- (Result: it rises gradually with the gap, so it is not a simple timeout rule.)
 WITH pairs AS (
     SELECT user_session,
            LAG(user_session) OVER w AS prev_session,
