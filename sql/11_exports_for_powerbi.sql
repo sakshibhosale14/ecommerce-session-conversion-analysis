@@ -1,4 +1,4 @@
--- 11: Small summary tables for the Power BI dashboard (committed in exports/).
+-- 11: Small summary tables for the Power BI dashboard.
 -- Power BI never touches the 100M-row files, only these CSVs.
 
 -- Hourly conversion: October vs cleaned November (Nov 15-17 excluded)
