@@ -109,7 +109,7 @@ Find the cause before investing in a fix: check traffic source, device and regio
 1. Download the dataset from Kaggle (search "eCommerce behavior data from multi category store") and put `2019-Oct.csv` and `2019-Nov.csv` in `data/raw/`. The data is not included because the files are several GB.
 2. `pip install duckdb`
 3. From the repo root, run `sql/01` to `sql/12` in order. Files 03, 05, 06 and 10 are heavy and can take several minutes.
-4. `python python/gap\\\\\\\_confidence\\\\\\\_interval.py`
+4. `python python/gap\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_confidence\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_interval.py`
 
 ## Data credit
 
