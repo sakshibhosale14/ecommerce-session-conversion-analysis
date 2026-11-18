@@ -2,6 +2,7 @@
 
 -- Conversion by main category (October). Main category = the most common
 -- first-level category in the session; 'unknown' if none.
+
 WITH sess AS (
     SELECT user_id, session_num,
            COALESCE(mode(split_part(category_code, '.', 1)), 'unknown') AS main_category,
